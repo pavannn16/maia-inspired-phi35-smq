@@ -1,4 +1,5 @@
 #include <torch/extension.h>
+#include <ATen/cuda/CUDAContext.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
@@ -94,6 +95,6 @@ torch::Tensor dequant_int4_shared_scale(
     );
 
     // Propagate any kernel errors
-    C10_CUDA_CHECK(cudaGetLastError());
+    AT_CUDA_CHECK(cudaGetLastError());
     return out;
 }
