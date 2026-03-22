@@ -1,5 +1,7 @@
 # Colab-first deps (pin in ENVIRONMENT.md when you validate)
-transformers>=4.46
+# Pinned to 4.44.2 — Phi-3.5 custom modeling code uses legacy DynamicCache API
+# (from_legacy_cache, get_usable_length, to_legacy_cache) removed in >=4.45
+transformers==4.44.2
 accelerate>=0.33
 safetensors>=0.4
 sentencepiece>=0.2
