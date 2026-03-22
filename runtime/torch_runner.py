@@ -47,39 +47,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-# ---------------------------------------------------------------------------
-# Compatibility shim — restores DynamicCache APIs removed in transformers≥4.45
-#
-# Phi-3.5 uses a cached custom modeling_phi3.py that calls:
-#   - DynamicCache.from_legacy_cache(past)   [classmethod, removed ~4.45]
-#   - cache.get_usable_length(seq_len)        [instance method, removed ~4.45]
-# These shims patch them back without requiring a transformers downgrade.
-# ---------------------------------------------------------------------------
-
-def _patch_dynamic_cache() -> None:
-    try:
-        from transformers import DynamicCache
-
-        if not hasattr(DynamicCache, "from_legacy_cache"):
-            @classmethod
-            def from_legacy_cache(cls, past_key_values=None):  # type: ignore[misc]
-                cache = cls()
-                if past_key_values is not None:
-                    for layer_idx, layer_past in enumerate(past_key_values):
-                        cache.update(layer_past[0], layer_past[1], layer_idx)
-                return cache
-            DynamicCache.from_legacy_cache = from_legacy_cache  # type: ignore[attr-defined]
-
-        if not hasattr(DynamicCache, "get_usable_length"):
-            def get_usable_length(self, new_seq_length: int, layer_idx: int = 0) -> int:  # type: ignore[misc]
-                return self.get_seq_length(layer_idx)
-            DynamicCache.get_usable_length = get_usable_length  # type: ignore[attr-defined]
-
-    except Exception:
-        pass
-
-
-_patch_dynamic_cache()
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
@@ -233,7 +200,7 @@ def load_model(
 
     if quant_mode == "none":
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, dtype=torch_dtype, trust_remote_code=True
+            model_id, dtype=torch_dtype
         )
         model.eval().to(device)
 
@@ -252,13 +219,12 @@ def load_model(
             model_id,
             quantization_config=bnb_cfg,
             device_map="auto",
-            trust_remote_code=True,
         )
         model.eval()
 
     elif quant_mode == "w4_shared_scale":
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, dtype=torch_dtype, trust_remote_code=True
+            model_id, dtype=torch_dtype
         )
         model.eval()
         n = _replace_layers_with_shared_scale(model, group_size, scale_mbits, quant_target)
