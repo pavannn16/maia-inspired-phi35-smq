@@ -72,9 +72,7 @@ def _patch_dynamic_cache() -> None:
 
         if not hasattr(DynamicCache, "get_usable_length"):
             def get_usable_length(self, new_seq_length: int, layer_idx: int = 0) -> int:  # type: ignore[misc]
-                if len(self.key_cache) <= layer_idx:
-                    return 0
-                return self.key_cache[layer_idx].shape[-2]
+                return self.get_seq_length(layer_idx)
             DynamicCache.get_usable_length = get_usable_length  # type: ignore[attr-defined]
 
     except Exception:
