@@ -45,6 +45,43 @@ import torch.nn as nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# ---------------------------------------------------------------------------
+# Compatibility shim — restores DynamicCache APIs removed in transformers≥4.45
+#
+# Phi-3.5 uses a cached custom modeling_phi3.py that calls:
+#   - DynamicCache.from_legacy_cache(past)   [classmethod, removed ~4.45]
+#   - cache.get_usable_length(seq_len)        [instance method, removed ~4.45]
+# These shims patch them back without requiring a transformers downgrade.
+# ---------------------------------------------------------------------------
+
+def _patch_dynamic_cache() -> None:
+    try:
+        from transformers import DynamicCache
+
+        if not hasattr(DynamicCache, "from_legacy_cache"):
+            @classmethod
+            def from_legacy_cache(cls, past_key_values=None):  # type: ignore[misc]
+                cache = cls()
+                if past_key_values is not None:
+                    for layer_idx, layer_past in enumerate(past_key_values):
+                        cache.update(layer_past[0], layer_past[1], layer_idx)
+                return cache
+            DynamicCache.from_legacy_cache = from_legacy_cache  # type: ignore[attr-defined]
+
+        if not hasattr(DynamicCache, "get_usable_length"):
+            def get_usable_length(self, new_seq_length: int, layer_idx: int = 0) -> int:  # type: ignore[misc]
+                if len(self.key_cache) <= layer_idx:
+                    return 0
+                return self.key_cache[layer_idx].shape[-2]
+            DynamicCache.get_usable_length = get_usable_length  # type: ignore[attr-defined]
+
+    except Exception:
+        pass
+
+
+_patch_dynamic_cache()
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
