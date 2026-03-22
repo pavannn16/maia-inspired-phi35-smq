@@ -42,7 +42,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
@@ -92,11 +92,11 @@ def greedy_decode_timed(
 ) -> Tuple[torch.Tensor, Timings]:
     device = input_ids.device
 
-    # Prefill
+    # Prefill — pass an explicit DynamicCache to avoid legacy from_legacy_cache API
     maybe_cuda_sync()
     t0 = now_ms()
     with torch.no_grad():
-        out = model(input_ids=input_ids, use_cache=True)
+        out = model(input_ids=input_ids, past_key_values=DynamicCache(), use_cache=True)
     maybe_cuda_sync()
     t1 = now_ms()
 
