@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Envs
+.venv/
+.env
+
+# Results artifacts
+results/raw/*.jsonl
+results/summary/*.csv
+results/aggregate/
+results/figures/
+results/plots/
+
+# Editor
+.vscode/
+.DS_Store

@@ -1,0 +1,27 @@
+# Colab-first deps (pin in ENVIRONMENT.md when you validate)
+transformers>=4.46
+accelerate>=0.33
+safetensors>=0.4
+sentencepiece>=0.2
+huggingface_hub>=0.24
+
+datasets>=2.20
+lm-eval>=0.4.5
+
+numpy>=1.26
+pandas>=2.2
+scipy>=1.13
+pyyaml>=6.0
+orjson>=3.10
+
+# W4A16 baseline (C2) and double-quant comparison (C6)
+bitsandbytes>=0.43
+
+# Analysis and plotting
+matplotlib>=3.7.0
+
+# Optional (power sampling)
+pynvml>=11.5
+
+# Optional (serving/perf truth). Install separately after confirming wheel availability on your Colab image.
+# vllm
