@@ -6,7 +6,7 @@ Runs lm-eval-harness (0.4+) for a given experiment config ID and writes
 results to results/lm_eval_{config_id}.json.
 
 Key decisions (frozen, must match experiment_matrix.yaml fairness_constraints):
-  - trust_remote_code=True  (Phi-3.5 requires custom model code)
+  - trust_remote_code omitted  (Phi-3.5 natively supported since transformers 4.39)
   - dtype=bfloat16          (all ablation configs)
   - num_fewshot=0           (zero-shot for instruct model)
   - do_sample=False, temperature=0  (deterministic greedy)
@@ -52,7 +52,7 @@ def _build_model_args(model_id: str, quant: Dict[str, Any], scale_mbits: int) ->
     mode = quant.get("mode", "none")
     dtype = "bfloat16"  # frozen per fairness_constraints
 
-    parts = [f"pretrained={model_id}", f"dtype={dtype}", "trust_remote_code=True"]
+    parts = [f"pretrained={model_id}", f"dtype={dtype}"]
 
     if mode in ("w4a16_bnb", "w4a16_bnb_dq"):
         parts += ["load_in_4bit=True", "bnb_4bit_quant_type=nf4",
